@@ -195,8 +195,11 @@ if __name__ == '__main__':
         except:
             pass
     
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('RAILWAY_ENVIRONMENT') is None
+    
     print("Starting Breakout Screener API Server...")
-    print("API available at http://localhost:5000")
+    print(f"API available at http://localhost:{port}")
     print()
     print("Endpoints:")
     print("  GET  /api/results  - Get scan results")
@@ -204,4 +207,4 @@ if __name__ == '__main__':
     print("  GET  /api/stock/<symbol> - Get single stock")
     print()
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=debug)
