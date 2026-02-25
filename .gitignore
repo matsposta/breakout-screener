@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.env.local
+venv/
+
+# Build outputs
+build/
+dist/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache/
+*.log
+
+# Scan results (regenerated)
+backend/scan_results.json
