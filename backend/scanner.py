@@ -36,7 +36,8 @@ class BreakoutScanner:
     def get_stock_universe(self) -> List[str]:
         """
         Returns a comprehensive list of stock symbols to scan.
-        Includes S&P 500, Nasdaq 100, high-growth stocks, and momentum names.
+        Includes S&P 500, Nasdaq 100, Russell 2000 leaders, and momentum names.
+        Total: 400+ stocks across all major sectors.
         """
         stocks = [
             # === MEGA CAP TECH ===
@@ -45,80 +46,117 @@ class BreakoutScanner:
             # === AI & CLOUD ===
             'PLTR', 'SMCI', 'ARM', 'CRWD', 'NET', 'SNOW', 'DDOG', 'MDB', 'PATH',
             'AI', 'BBAI', 'SOUN', 'UPST', 'AFRM', 'NOW', 'PANW', 'ZS', 'OKTA',
-            'FTNT', 'SPLK', 'ESTC', 'CFLT', 'GTLB', 'DOCN', 'DT', 'NEWR',
+            'FTNT', 'ESTC', 'CFLT', 'GTLB', 'DOCN', 'DT', 'NEWR', 'ESTC',
+            'ASAN', 'MNDY', 'FROG', 'SUMO', 'PD', 'BRZE', 'AMPL',
             
-            # === SEMICONDUCTORS ===
+            # === SEMICONDUCTORS (EXPANDED) ===
             'AMD', 'AVGO', 'MRVL', 'QCOM', 'MU', 'LRCX', 'KLAC', 'AMAT', 'ASML', 'TSM',
             'INTC', 'TXN', 'ADI', 'NXPI', 'ON', 'MPWR', 'MCHP', 'SWKS', 'QRVO',
-            'WOLF', 'CRUS', 'SLAB', 'SITM', 'RMBS',
+            'WOLF', 'CRUS', 'SLAB', 'SITM', 'RMBS', 'ACLS', 'UCTT', 'AEHR', 'FORM',
+            'SYNA', 'DIOD', 'POWI', 'AMBA', 'HIMX', 'AOSL', 'ALGM', 'SGH',
             
-            # === CRYPTO & FINTECH ===
+            # === CRYPTO & FINTECH (EXPANDED) ===
             'COIN', 'MSTR', 'HOOD', 'SOFI', 'NU', 'SQ', 'PYPL', 'V', 'MA', 'AXP',
             'GS', 'MS', 'JPM', 'BAC', 'C', 'WFC', 'SCHW', 'LPLA', 'IBKR',
+            'UPST', 'LC', 'OPEN', 'TREE', 'NAVI', 'SLM', 'ALLY', 'COF', 'DFS',
+            'MARA', 'RIOT', 'CLSK', 'CIFR', 'BITF', 'HUT', 'BTBT',
             
-            # === E-COMMERCE & CONSUMER ===
+            # === E-COMMERCE & CONSUMER (EXPANDED) ===
             'SHOP', 'MELI', 'SE', 'BABA', 'JD', 'PDD', 'CPNG', 'ETSY', 'EBAY', 'W',
-            'AMZN', 'TGT', 'WMT', 'COST', 'HD', 'LOW', 'BBY', 'DG', 'DLTR',
-            'LULU', 'NKE', 'DECK', 'ONON', 'BIRK', 'CROX', 'SKX',
+            'TGT', 'WMT', 'COST', 'HD', 'LOW', 'BBY', 'DG', 'DLTR', 'FIVE', 'OLLI',
+            'LULU', 'NKE', 'DECK', 'ONON', 'BIRK', 'CROX', 'SKX', 'UAA', 'VFC',
+            'GPS', 'ANF', 'AEO', 'URBN', 'EXPR', 'VSCO', 'RL', 'PVH', 'TPR',
+            'ELF', 'ULTA', 'COTY', 'EL', 'SKIN', 'HIMS', 'PRCH', 'CVNA', 'CARS',
             
-            # === FOOD & BEVERAGE ===
+            # === FOOD & BEVERAGE (EXPANDED) ===
             'CELH', 'MNST', 'KO', 'PEP', 'SBUX', 'MCD', 'CMG', 'CAVA', 'DPZ', 'YUM',
-            'WING', 'SHAK', 'BROS', 'DNUT', 'WEN', 'QSR',
+            'WING', 'SHAK', 'BROS', 'DNUT', 'WEN', 'QSR', 'DIN', 'TXRH', 'CAKE',
+            'PLAY', 'EAT', 'DRI', 'BLMN', 'BJRI', 'JACK', 'ARCO', 'LOCO',
+            'FIZZ', 'SAM', 'BUD', 'TAP', 'STZ', 'DEO', 'BF.B',
             
-            # === ELECTRIC VEHICLES & ENERGY ===
-            'TSLA', 'RIVN', 'LCID', 'NIO', 'XPEV', 'LI', 'FSR', 'FFIE', 'GOEV',
+            # === ELECTRIC VEHICLES & CLEAN ENERGY (EXPANDED) ===
+            'TSLA', 'RIVN', 'LCID', 'NIO', 'XPEV', 'LI', 'FSR', 'GOEV', 'NKLA',
             'ENPH', 'FSLR', 'RUN', 'SEDG', 'NOVA', 'MAXN', 'ARRY', 'CSIQ', 'JKS',
-            'NEE', 'CEG', 'VST', 'PLUG', 'BE', 'BLDP', 'FCEL',
+            'NEE', 'CEG', 'VST', 'PLUG', 'BE', 'BLDP', 'FCEL', 'BLOOM',
+            'CHPT', 'EVGO', 'BLNK', 'DCFC', 'AMPX', 'PTRA', 'LEV', 'GTLB',
+            'STEM', 'FLUX', 'OUST', 'LAZR', 'LIDR', 'AEVA', 'INVZ', 'VLDR',
+            'ALB', 'LAC', 'LTHM', 'SQM', 'PLL', 'ALTM', 'MP', 'UUUU',
             
-            # === SPACE & DEFENSE ===
-            'RKLB', 'LUNR', 'ASTS', 'RDW', 'SPCE', 'ASTR',
+            # === SPACE & DEFENSE (EXPANDED) ===
+            'RKLB', 'LUNR', 'ASTS', 'RDW', 'SPCE', 'MNTS', 'VORB', 'ASTR',
             'LMT', 'RTX', 'NOC', 'GD', 'BA', 'LHX', 'HII', 'TDG', 'HEI',
+            'KTOS', 'AVAV', 'MRCY', 'AJRD', 'BWXT', 'LDOS', 'SAIC', 'BAH',
+            'PSN', 'TXT', 'ERJ', 'SPR', 'HXL', 'WWD', 'MOG.A', 'CW',
             
-            # === BIOTECH & HEALTHCARE ===
+            # === BIOTECH & HEALTHCARE (EXPANDED) ===
             'MRNA', 'BNTX', 'CRSP', 'NTLA', 'BEAM', 'EDIT', 'RXRX', 'DNA',
             'LLY', 'NVO', 'UNH', 'JNJ', 'PFE', 'ABBV', 'MRK', 'BMY', 'GILD', 'REGN',
-            'VRTX', 'BIIB', 'ALNY', 'SGEN', 'EXAS', 'DXCM', 'ISRG', 'INTU', 'VEEV',
-            'HIMS', 'DOCS', 'TDOC', 'AMWL', 'TALK',
+            'VRTX', 'BIIB', 'ALNY', 'EXAS', 'DXCM', 'ISRG', 'VEEV',
+            'HIMS', 'DOCS', 'TDOC', 'AMWL', 'TALK', 'ACCD', 'OSH', 'PHR',
+            'RGEN', 'TECH', 'BIO', 'A', 'TMO', 'DHR', 'IQV', 'MTD', 'WAT',
+            'ZBH', 'SYK', 'MDT', 'BSX', 'ABT', 'EW', 'HOLX', 'ALGN', 'NVST',
+            'XENE', 'SAVA', 'IMVT', 'APLS', 'KRYS', 'ARWR', 'IONS', 'SRPT',
             
-            # === GAMING & ENTERTAINMENT ===
+            # === GAMING & ENTERTAINMENT (EXPANDED) ===
             'TTWO', 'EA', 'RBLX', 'U', 'DKNG', 'PENN', 'CHDN', 'MGM', 'CZR', 'WYNN',
             'NFLX', 'DIS', 'WBD', 'PARA', 'CMCSA', 'LYV', 'SPOT', 'TME',
+            'RCL', 'CCL', 'NCLH', 'MAR', 'HLT', 'H', 'ABNB', 'BKNG', 'EXPE',
+            'MTCH', 'BMBL', 'GRND', 'SKLZ',
             
-            # === SOCIAL & ADVERTISING ===
+            # === SOCIAL & ADVERTISING (EXPANDED) ===
             'SNAP', 'PINS', 'RDDT', 'TTD', 'ROKU', 'MGNI', 'PUBM', 'DSP',
-            'APP', 'DUOL', 'PTON', 'CHGG', 'UDMY', 'COUR',
+            'APP', 'DUOL', 'PTON', 'CHGG', 'UDMY', 'COUR', 'TWOU', 'LRN',
+            'DV', 'IAS', 'CRTO', 'TBLA', 'ZETA', 'SEMR',
             
             # === QUANTUM & EMERGING TECH ===
-            'IONQ', 'RGTI', 'QUBT', 'ARQQ',
-            'ARKK', 'ARKW', 'ARKF', 'ARKG', 'ARKQ',
+            'IONQ', 'RGTI', 'QUBT', 'ARQQ', 'QBTS',
             
-            # === REAL ESTATE & INFRASTRUCTURE ===
+            # === REAL ESTATE & INFRASTRUCTURE (EXPANDED) ===
             'AMT', 'CCI', 'EQIX', 'DLR', 'SBAC', 'SPG', 'O', 'VICI', 'GLPI',
-            'VRT', 'PWR', 'EME', 'FIX', 'APO', 'KKR', 'BX', 'CG',
+            'VRT', 'PWR', 'EME', 'FIX', 'APO', 'KKR', 'BX', 'CG', 'ARES',
+            'PLD', 'PSA', 'EXR', 'CUBE', 'LSI', 'NSA', 'REXR', 'STAG',
+            'ARE', 'BXP', 'SLG', 'VNO', 'CBRE', 'JLL', 'CSGP', 'RKT',
             
-            # === INDUSTRIAL & MANUFACTURING ===
+            # === INDUSTRIAL & MANUFACTURING (EXPANDED) ===
             'CAT', 'DE', 'GE', 'HON', 'MMM', 'UPS', 'FDX', 'UNP', 'CSX', 'NSC',
-            'URI', 'PCAR', 'ODFL', 'XPO', 'JBHT', 'CHRW', 'EXPD',
+            'URI', 'PCAR', 'ODFL', 'XPO', 'JBHT', 'CHRW', 'EXPD', 'SAIA', 'ARCB',
+            'WAB', 'TTC', 'GNRC', 'SWK', 'IR', 'PNR', 'XYL', 'IEX', 'FSLR',
+            'PLUG', 'SEDG', 'ENPH', 'RUN', 'NOVA', 'MAXN', 'SHLS', 'ARRY',
             
-            # === SOFTWARE & SAAS ===
+            # === SOFTWARE & SAAS (EXPANDED) ===
             'CRM', 'ADBE', 'ORCL', 'SAP', 'WDAY', 'TEAM', 'ZM', 'DOCU', 'BILL',
             'HUBS', 'TWLO', 'ZI', 'MNDY', 'FROG', 'ASAN', 'SUMO', 'S',
+            'GTLB', 'ESTC', 'MDB', 'CFLT', 'NEWR', 'DDOG', 'SPLK', 'COUP',
+            'APPF', 'APPN', 'BASE', 'BAND', 'LPSN', 'NICE', 'MANH', 'TYL',
+            'CDNS', 'SNPS', 'ANSS', 'PTC', 'AZPN', 'ALTR', 'QTWO', 'NCNO',
             
-            # === CYBERSECURITY ===
-            'CRWD', 'S', 'FTNT', 'PANW', 'ZS', 'OKTA', 'QLYS', 'TENB', 'RPD', 'CYBR',
+            # === CYBERSECURITY (EXPANDED) ===
+            'CRWD', 'FTNT', 'PANW', 'ZS', 'OKTA', 'QLYS', 'TENB', 'RPD', 'CYBR',
+            'S', 'VRNS', 'SAIL', 'BB', 'RDWR', 'OSPN', 'SCWX', 'NSIT',
             
-            # === RECENT IPOS & SPACS ===
-            'GRAB', 'GETY', 'IONQ', 'JOBY', 'ACHR', 'LILM', 'EVTL',
-            'CMAX', 'VFS', 'SLDP', 'QS', 'MVST',
+            # === RECENT IPOS & HIGH GROWTH ===
+            'GRAB', 'IONQ', 'JOBY', 'ACHR', 'LILM', 'EVTL', 'VFS', 'SLDP', 'QS',
+            'IOT', 'TOST', 'BRDS', 'CART', 'ARM', 'BIRK', 'ONON', 'CAVA',
             
-            # === ADDITIONAL MOMENTUM ===
+            # === ADDITIONAL RUSSELL 2000 MOMENTUM ===
             'AXON', 'TMDX', 'INTA', 'KTOS', 'IRDM', 'GRMN', 'TER', 'ENTG',
-            'ALGN', 'MKTX', 'PAYC', 'PCTY', 'WK', 'APPF', 'APPN', 'COUP',
-            'ZEN', 'BASE', 'BRZE', 'AMPL', 'PD', 'BAND', 'LPSN',
+            'MKTX', 'PAYC', 'PCTY', 'WK', 'ZEN', 'AMPL', 'PD',
+            'TGTX', 'EXEL', 'INCY', 'PCVX', 'VKTX', 'DAWN', 'SRRK',
+            'SMMT', 'CLOV', 'CANO', 'ALHC', 'OSCR', 'CLVR', 'NTRA',
+            'RELY', 'DLO', 'PAYO', 'FLYW', 'RELY', 'MQ', 'AFRM',
             
-            # === VALUE WITH MOMENTUM ===
-            'BRK.B', 'JPM', 'XOM', 'CVX', 'COP', 'EOG', 'SLB', 'OXY', 'DVN', 'HAL',
-            'T', 'VZ', 'TMUS', 'CHTR', 'CMCSA',
+            # === ENERGY & COMMODITIES ===
+            'XOM', 'CVX', 'COP', 'EOG', 'SLB', 'OXY', 'DVN', 'HAL', 'MPC',
+            'VLO', 'PSX', 'PBF', 'DINO', 'HES', 'FANG', 'PXD', 'APA',
+            'CTRA', 'OVV', 'RRC', 'AR', 'SWN', 'EQT', 'CNX',
+            'FCX', 'NEM', 'GOLD', 'AEM', 'WPM', 'FNV', 'RGLD',
+            'AA', 'NUE', 'STLD', 'CLF', 'X', 'RS', 'ATI', 'CMC',
+            
+            # === TELECOM & MEDIA ===
+            'T', 'VZ', 'TMUS', 'CHTR', 'FYBR', 'LUMN', 'USM',
+            
+            # === CANNABIS ===
+            'TLRY', 'CGC', 'ACB', 'SNDL', 'OGI', 'HEXO', 'VFF', 'GRWG',
         ]
         
         # Remove duplicates while preserving order
