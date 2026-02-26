@@ -254,8 +254,13 @@ const StockCard = ({ stock, expanded, onToggle, rank }) => {
               <StatusChip status={stock.status} />
             </div>
             <p className="text-sm text-slate-400 truncate">{stock.name}</p>
-            <div className="flex items-center gap-4 mt-2 flex-wrap">
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className="text-xl font-bold text-white">${stock.price}</span>
+              {stock.day_change !== undefined && stock.day_change !== 0 && (
+                <span className={`text-sm font-bold px-2 py-0.5 rounded-md ${stock.day_change >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                  {stock.day_change >= 0 ? '+' : ''}{stock.day_change.toFixed(2)} ({stock.day_change >= 0 ? '+' : ''}{stock.day_change_pct}%)
+                </span>
+              )}
               <span className="text-xs px-2 py-1 rounded-md bg-blue-500/20 text-blue-400 font-medium">{stock.market_cap_fmt || 'N/A'}</span>
               <span className="text-xs px-2 py-1 rounded-md bg-slate-800 text-slate-400">{stock.sector}</span>
               <span className="text-xs text-slate-500">{metCount}/6 criteria met</span>

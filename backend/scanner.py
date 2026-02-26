@@ -392,6 +392,9 @@ class BreakoutScanner:
             company_name = symbol
             sector = 'Unknown'
             industry = 'Unknown'
+            prev_close = 0
+            day_change = 0
+            day_change_pct = 0
             
             try:
                 info = ticker.info
@@ -399,8 +402,14 @@ class BreakoutScanner:
                 company_name = info.get('shortName', symbol)
                 sector = info.get('sector', 'Unknown')
                 industry = info.get('industry', 'Unknown')
+                prev_close = info.get('previousClose', 0) or info.get('regularMarketPreviousClose', 0) or 0
             except:
                 pass
+            
+            # Calculate intraday change
+            if prev_close > 0:
+                day_change = round(current_price - prev_close, 2)
+                day_change_pct = round(((current_price - prev_close) / prev_close) * 100, 2)
             
             # Filter by minimum market cap ($500M)
             if market_cap < self.min_market_cap:
@@ -443,6 +452,9 @@ class BreakoutScanner:
                 'sector': sector,
                 'industry': industry,
                 'price': round(current_price, 2),
+                'prev_close': prev_close,
+                'day_change': day_change,
+                'day_change_pct': day_change_pct,
                 'market_cap': market_cap,
                 'market_cap_fmt': self.format_market_cap(market_cap),
                 'prior_move_pct': round(prior_move['move_pct'], 1),
