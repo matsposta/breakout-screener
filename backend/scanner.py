@@ -35,38 +35,96 @@ class BreakoutScanner:
         
     def get_stock_universe(self) -> List[str]:
         """
-        Returns a list of stock symbols to scan.
-        This includes momentum stocks, recent IPOs, and high-beta names.
+        Returns a comprehensive list of stock symbols to scan.
+        Includes S&P 500, Nasdaq 100, high-growth stocks, and momentum names.
         """
-        # High momentum / growth stocks commonly showing breakout patterns
-        momentum_stocks = [
-            # AI / Tech
-            'NVDA', 'PLTR', 'SMCI', 'ARM', 'CRWD', 'NET', 'SNOW', 'DDOG', 'MDB', 'PATH',
-            'AI', 'BBAI', 'SOUN', 'UPST', 'AFRM', 'SQ', 'SHOP', 'MELI', 'SE',
-            # Crypto / Fintech
-            'COIN', 'MSTR', 'HOOD', 'SOFI', 'NU', 'AFRM', 'LPLA',
-            # Semiconductors
+        stocks = [
+            # === MEGA CAP TECH ===
+            'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'META', 'NVDA', 'TSLA', 'BRK.B',
+            
+            # === AI & CLOUD ===
+            'PLTR', 'SMCI', 'ARM', 'CRWD', 'NET', 'SNOW', 'DDOG', 'MDB', 'PATH',
+            'AI', 'BBAI', 'SOUN', 'UPST', 'AFRM', 'NOW', 'PANW', 'ZS', 'OKTA',
+            'FTNT', 'SPLK', 'ESTC', 'CFLT', 'GTLB', 'DOCN', 'DT', 'NEWR',
+            
+            # === SEMICONDUCTORS ===
             'AMD', 'AVGO', 'MRVL', 'QCOM', 'MU', 'LRCX', 'KLAC', 'AMAT', 'ASML', 'TSM',
-            # EV / Energy
-            'TSLA', 'RIVN', 'LCID', 'NIO', 'XPEV', 'LI', 'ENPH', 'FSLR', 'RUN',
-            # Space / Defense
-            'RKLB', 'LUNR', 'ASTS', 'RDW', 'SPCE', 'LMT', 'RTX', 'NOC', 'GD',
-            # Biotech / Healthcare
+            'INTC', 'TXN', 'ADI', 'NXPI', 'ON', 'MPWR', 'MCHP', 'SWKS', 'QRVO',
+            'WOLF', 'CRUS', 'SLAB', 'SITM', 'RMBS',
+            
+            # === CRYPTO & FINTECH ===
+            'COIN', 'MSTR', 'HOOD', 'SOFI', 'NU', 'SQ', 'PYPL', 'V', 'MA', 'AXP',
+            'GS', 'MS', 'JPM', 'BAC', 'C', 'WFC', 'SCHW', 'LPLA', 'IBKR',
+            
+            # === E-COMMERCE & CONSUMER ===
+            'SHOP', 'MELI', 'SE', 'BABA', 'JD', 'PDD', 'CPNG', 'ETSY', 'EBAY', 'W',
+            'AMZN', 'TGT', 'WMT', 'COST', 'HD', 'LOW', 'BBY', 'DG', 'DLTR',
+            'LULU', 'NKE', 'DECK', 'ONON', 'BIRK', 'CROX', 'SKX',
+            
+            # === FOOD & BEVERAGE ===
+            'CELH', 'MNST', 'KO', 'PEP', 'SBUX', 'MCD', 'CMG', 'CAVA', 'DPZ', 'YUM',
+            'WING', 'SHAK', 'BROS', 'DNUT', 'WEN', 'QSR',
+            
+            # === ELECTRIC VEHICLES & ENERGY ===
+            'TSLA', 'RIVN', 'LCID', 'NIO', 'XPEV', 'LI', 'FSR', 'FFIE', 'GOEV',
+            'ENPH', 'FSLR', 'RUN', 'SEDG', 'NOVA', 'MAXN', 'ARRY', 'CSIQ', 'JKS',
+            'NEE', 'CEG', 'VST', 'PLUG', 'BE', 'BLDP', 'FCEL',
+            
+            # === SPACE & DEFENSE ===
+            'RKLB', 'LUNR', 'ASTS', 'RDW', 'SPCE', 'ASTR',
+            'LMT', 'RTX', 'NOC', 'GD', 'BA', 'LHX', 'HII', 'TDG', 'HEI',
+            
+            # === BIOTECH & HEALTHCARE ===
             'MRNA', 'BNTX', 'CRSP', 'NTLA', 'BEAM', 'EDIT', 'RXRX', 'DNA',
-            # Gaming / Entertainment
-            'TTWO', 'EA', 'RBLX', 'U', 'DKNG', 'PENN',
-            # Other high-momentum
-            'CELH', 'DUOL', 'APP', 'TTD', 'ROKU', 'PINS', 'SNAP', 'RDDT',
-            # Quantum Computing
-            'IONQ', 'RGTI', 'QUBT',
-            # Recent strong movers
-            'HIMS', 'GRAB', 'VRT', 'CAVA', 'BIRK', 'ONON', 'LULU',
+            'LLY', 'NVO', 'UNH', 'JNJ', 'PFE', 'ABBV', 'MRK', 'BMY', 'GILD', 'REGN',
+            'VRTX', 'BIIB', 'ALNY', 'SGEN', 'EXAS', 'DXCM', 'ISRG', 'INTU', 'VEEV',
+            'HIMS', 'DOCS', 'TDOC', 'AMWL', 'TALK',
+            
+            # === GAMING & ENTERTAINMENT ===
+            'TTWO', 'EA', 'RBLX', 'U', 'DKNG', 'PENN', 'CHDN', 'MGM', 'CZR', 'WYNN',
+            'NFLX', 'DIS', 'WBD', 'PARA', 'CMCSA', 'LYV', 'SPOT', 'TME',
+            
+            # === SOCIAL & ADVERTISING ===
+            'SNAP', 'PINS', 'RDDT', 'TTD', 'ROKU', 'MGNI', 'PUBM', 'DSP',
+            'APP', 'DUOL', 'PTON', 'CHGG', 'UDMY', 'COUR',
+            
+            # === QUANTUM & EMERGING TECH ===
+            'IONQ', 'RGTI', 'QUBT', 'ARQQ',
+            'ARKK', 'ARKW', 'ARKF', 'ARKG', 'ARKQ',
+            
+            # === REAL ESTATE & INFRASTRUCTURE ===
+            'AMT', 'CCI', 'EQIX', 'DLR', 'SBAC', 'SPG', 'O', 'VICI', 'GLPI',
+            'VRT', 'PWR', 'EME', 'FIX', 'APO', 'KKR', 'BX', 'CG',
+            
+            # === INDUSTRIAL & MANUFACTURING ===
+            'CAT', 'DE', 'GE', 'HON', 'MMM', 'UPS', 'FDX', 'UNP', 'CSX', 'NSC',
+            'URI', 'PCAR', 'ODFL', 'XPO', 'JBHT', 'CHRW', 'EXPD',
+            
+            # === SOFTWARE & SAAS ===
+            'CRM', 'ADBE', 'ORCL', 'SAP', 'WDAY', 'TEAM', 'ZM', 'DOCU', 'BILL',
+            'HUBS', 'TWLO', 'ZI', 'MNDY', 'FROG', 'ASAN', 'SUMO', 'S',
+            
+            # === CYBERSECURITY ===
+            'CRWD', 'S', 'FTNT', 'PANW', 'ZS', 'OKTA', 'QLYS', 'TENB', 'RPD', 'CYBR',
+            
+            # === RECENT IPOS & SPACS ===
+            'GRAB', 'GETY', 'IONQ', 'JOBY', 'ACHR', 'LILM', 'EVTL',
+            'CMAX', 'VFS', 'SLDP', 'QS', 'MVST',
+            
+            # === ADDITIONAL MOMENTUM ===
+            'AXON', 'TMDX', 'INTA', 'KTOS', 'IRDM', 'GRMN', 'TER', 'ENTG',
+            'ALGN', 'MKTX', 'PAYC', 'PCTY', 'WK', 'APPF', 'APPN', 'COUP',
+            'ZEN', 'BASE', 'BRZE', 'AMPL', 'PD', 'BAND', 'LPSN',
+            
+            # === VALUE WITH MOMENTUM ===
+            'BRK.B', 'JPM', 'XOM', 'CVX', 'COP', 'EOG', 'SLB', 'OXY', 'DVN', 'HAL',
+            'T', 'VZ', 'TMUS', 'CHTR', 'CMCSA',
         ]
         
         # Remove duplicates while preserving order
         seen = set()
         unique = []
-        for s in momentum_stocks:
+        for s in stocks:
             if s not in seen:
                 seen.add(s)
                 unique.append(s)
