@@ -30,6 +30,7 @@ class BreakoutScanner:
         self.min_price = 1.0
         self.min_adr_pct = 5.0
         self.min_dollar_volume = 3_500_000
+        self.min_market_cap = 500_000_000  # Minimum $500M market cap
         self.min_prior_move = 30.0  # Minimum 30% move before consolidation
         self.lookback_days = 120    # Days of history to analyze
         
@@ -352,6 +353,17 @@ class BreakoutScanner:
         
         return min(100, score)
     
+    def format_market_cap(self, market_cap: float) -> str:
+        """Format market cap for display."""
+        if market_cap >= 1_000_000_000_000:
+            return f"${market_cap / 1_000_000_000_000:.2f}T"
+        elif market_cap >= 1_000_000_000:
+            return f"${market_cap / 1_000_000_000:.2f}B"
+        elif market_cap >= 1_000_000:
+            return f"${market_cap / 1_000_000:.1f}M"
+        else:
+            return f"${market_cap:,.0f}"
+    
     def scan_stock(self, symbol: str) -> Optional[Dict]:
         """
         Scan a single stock for breakout setup.
@@ -373,6 +385,25 @@ class BreakoutScanner:
             
             # Check minimum price
             if current_price < self.min_price:
+                return None
+            
+            # Get company info and market cap early to filter
+            market_cap = 0
+            company_name = symbol
+            sector = 'Unknown'
+            industry = 'Unknown'
+            
+            try:
+                info = ticker.info
+                market_cap = info.get('marketCap', 0) or 0
+                company_name = info.get('shortName', symbol)
+                sector = info.get('sector', 'Unknown')
+                industry = info.get('industry', 'Unknown')
+            except:
+                pass
+            
+            # Filter by minimum market cap ($500M)
+            if market_cap < self.min_market_cap:
                 return None
             
             # Calculate SMAs
@@ -408,7 +439,12 @@ class BreakoutScanner:
             # Compile all metrics
             metrics = {
                 'symbol': symbol,
+                'name': company_name,
+                'sector': sector,
+                'industry': industry,
                 'price': round(current_price, 2),
+                'market_cap': market_cap,
+                'market_cap_fmt': self.format_market_cap(market_cap),
                 'prior_move_pct': round(prior_move['move_pct'], 1),
                 'sma10_slope': round(sma10_slope, 2),
                 'sma20_slope': round(sma20_slope, 2),
@@ -434,17 +470,6 @@ class BreakoutScanner:
                 metrics['status'] = 'forming'
             else:
                 metrics['status'] = 'watching'
-            
-            # Get company info
-            try:
-                info = ticker.info
-                metrics['name'] = info.get('shortName', symbol)
-                metrics['sector'] = info.get('sector', 'Unknown')
-                metrics['industry'] = info.get('industry', 'Unknown')
-            except:
-                metrics['name'] = symbol
-                metrics['sector'] = 'Unknown'
-                metrics['industry'] = 'Unknown'
             
             # Get chart data for frontend
             chart_data = []

@@ -254,8 +254,9 @@ const StockCard = ({ stock, expanded, onToggle, rank }) => {
               <StatusChip status={stock.status} />
             </div>
             <p className="text-sm text-slate-400 truncate">{stock.name}</p>
-            <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-4 mt-2 flex-wrap">
               <span className="text-xl font-bold text-white">${stock.price}</span>
+              <span className="text-xs px-2 py-1 rounded-md bg-blue-500/20 text-blue-400 font-medium">{stock.market_cap_fmt || 'N/A'}</span>
               <span className="text-xs px-2 py-1 rounded-md bg-slate-800 text-slate-400">{stock.sector}</span>
               <span className="text-xs text-slate-500">{metCount}/6 criteria met</span>
             </div>
@@ -301,6 +302,10 @@ const StockCard = ({ stock, expanded, onToggle, rank }) => {
                 KEY METRICS
               </h4>
               <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-center col-span-2">
+                  <div className="text-xs text-blue-400 uppercase">Market Cap</div>
+                  <div className="text-lg font-bold text-blue-400">{stock.market_cap_fmt || 'N/A'}</div>
+                </div>
                 <div className="bg-slate-800/50 rounded-xl p-3 text-center">
                   <div className="text-xs text-slate-500 uppercase">Distance</div>
                   <div className={`text-lg font-bold ${stock.distance_to_breakout <= 3 ? 'text-orange-400' : 'text-slate-300'}`}>{stock.distance_to_breakout}%</div>
