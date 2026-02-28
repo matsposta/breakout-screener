@@ -631,6 +631,11 @@ export default function App() {
   const [metrics, setMetrics] = useState({});
   const [strategy, setStrategy] = useState({});
   const [performanceStats, setPerformanceStats] = useState(null);
+  const [trendData, setTrendData] = useState({});
+  const [trendingStocks, setTrendingStocks] = useState([]);
+  const [selectedTrendStocks, setSelectedTrendStocks] = useState([]);
+  const [isBuildingHistory, setIsBuildingHistory] = useState(false);
+  const [historySummary, setHistorySummary] = useState(null);
 
   const fetchResults = useCallback(async () => {
     try {
@@ -696,6 +701,65 @@ export default function App() {
     }
   };
 
+  const fetchTrendData = async (symbols = []) => {
+    try {
+      const symbolParam = symbols.length > 0 ? `symbols=${symbols.join(',')}` : '';
+      const response = await fetch(`${API_BASE}/api/history/chart?${symbolParam}&days=30`);
+      if (response.ok) {
+        const data = await response.json();
+        setTrendData(data.data || {});
+      }
+    } catch (err) {
+      console.error('Error fetching trend data:', err);
+    }
+  };
+
+  const fetchTrendingStocks = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/history/trending?min_increase=5&days=5`);
+      if (response.ok) {
+        const data = await response.json();
+        setTrendingStocks(data.trending || []);
+      }
+    } catch (err) {
+      console.error('Error fetching trending stocks:', err);
+    }
+  };
+
+  const fetchHistorySummary = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/history/summary`);
+      if (response.ok) {
+        setHistorySummary(await response.json());
+      }
+    } catch (err) {
+      console.error('Error fetching history summary:', err);
+    }
+  };
+
+  const buildScoreHistory = async () => {
+    try {
+      setIsBuildingHistory(true);
+      const response = await fetch(`${API_BASE}/api/history/build`, { method: 'POST' });
+      if (response.ok) {
+        const pollInterval = setInterval(async () => {
+          const statusResponse = await fetch(`${API_BASE}/api/history/status`);
+          const status = await statusResponse.json();
+          if (!status.is_running) {
+            clearInterval(pollInterval);
+            setIsBuildingHistory(false);
+            fetchTrendData();
+            fetchTrendingStocks();
+            fetchHistorySummary();
+          }
+        }, 5000);
+      }
+    } catch (err) {
+      console.error('Failed to build history:', err);
+      setIsBuildingHistory(false);
+    }
+  };
+
   const triggerScan = async () => {
     try {
       setIsScanning(true);
@@ -721,6 +785,9 @@ export default function App() {
     fetchResults();
     fetchLearnContent();
     fetchPerformanceStats();
+    fetchTrendData();
+    fetchTrendingStocks();
+    fetchHistorySummary();
   }, [fetchResults]);
 
   const filteredStocks = useMemo(() => {
@@ -781,14 +848,15 @@ export default function App() {
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-2 mt-4 -mb-px">
+          <div className="flex items-center gap-2 mt-4 -mb-px overflow-x-auto">
             {[
               { id: 'scanner', label: 'Scanner', icon: Icons.Fire },
+              { id: 'trends', label: 'Trends', icon: Icons.TrendingUp },
               { id: 'performance', label: 'Performance', icon: Icons.BarChart2 },
               { id: 'learn', label: 'Learn', icon: Icons.Book },
             ].map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl font-medium transition-all border-b-2 -mb-px
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl font-medium transition-all border-b-2 -mb-px whitespace-nowrap
                   ${activeTab === tab.id 
                     ? 'bg-slate-900/80 text-orange-400 border-orange-500' 
                     : 'text-slate-400 hover:text-white border-transparent hover:bg-slate-800/30'}`}>
@@ -874,6 +942,186 @@ export default function App() {
               </div>
             )}
           </>
+        )}
+
+        {/* TRENDS TAB */}
+        {activeTab === 'trends' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-white mb-2">Score Trends</h2>
+                <p className="text-slate-400">Track how breakout scores evolve day by day. Spot stocks building momentum before they break out.</p>
+              </div>
+              <button onClick={buildScoreHistory} disabled={isBuildingHistory}
+                className={`px-5 py-2.5 rounded-xl font-medium transition-all ${isBuildingHistory ? 'bg-slate-700 text-slate-400' : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:scale-105'}`}>
+                {isBuildingHistory ? 'Building...' : 'Build History'}
+              </button>
+            </div>
+
+            {/* Summary Stats */}
+            {historySummary && historySummary.total_stocks > 0 && (
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-white">{historySummary.total_stocks}</div>
+                  <div className="text-xs text-slate-400">Stocks Tracked</div>
+                </div>
+                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-orange-400">{historySummary.hot_count}</div>
+                  <div className="text-xs text-slate-400">Currently Hot (75+)</div>
+                </div>
+                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-slate-300">{historySummary.average_score}</div>
+                  <div className="text-xs text-slate-400">Avg Score</div>
+                </div>
+                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 text-center">
+                  <div className="text-sm font-bold text-slate-300">{historySummary.date_range?.start || '--'}</div>
+                  <div className="text-xs text-slate-400">to {historySummary.date_range?.end || '--'}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Trending Stocks */}
+            {trendingStocks.length > 0 && (
+              <div className="bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-emerald-400 mb-4 flex items-center gap-2">
+                  <Icons.TrendingUp size={20} />
+                  Heating Up (Score Increasing)
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {trendingStocks.slice(0, 8).map((stock, i) => (
+                    <button key={i} onClick={() => {
+                      const newSelection = selectedTrendStocks.includes(stock.symbol)
+                        ? selectedTrendStocks.filter(s => s !== stock.symbol)
+                        : [...selectedTrendStocks, stock.symbol].slice(-5);
+                      setSelectedTrendStocks(newSelection);
+                      fetchTrendData(newSelection);
+                    }}
+                      className={`p-3 rounded-xl text-left transition-all ${selectedTrendStocks.includes(stock.symbol) ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800/50 hover:bg-slate-800'}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-white">{stock.symbol}</span>
+                        <span className="text-emerald-400 text-sm font-bold">+{stock.score_change}</span>
+                      </div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        {stock.past_score} → {stock.current_score}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Score Chart */}
+            {Object.keys(trendData).length > 0 ? (
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-white">Score History (30 Days)</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.keys(trendData).map(symbol => (
+                      <span key={symbol} className="px-2 py-1 bg-slate-800 rounded text-xs font-medium text-slate-300">{symbol}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart margin={{ top: 10, right: 10, bottom: 30, left: 10 }}>
+                      <defs>
+                        {Object.keys(trendData).map((symbol, idx) => {
+                          const colors = ['#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+                          return (
+                            <linearGradient key={symbol} id={`gradient-${symbol}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={colors[idx % colors.length]} stopOpacity={0.3} />
+                              <stop offset="100%" stopColor={colors[idx % colors.length]} stopOpacity={0} />
+                            </linearGradient>
+                          );
+                        })}
+                      </defs>
+                      <XAxis 
+                        dataKey="date" 
+                        type="category"
+                        allowDuplicatedCategory={false}
+                        tick={{ fill: '#64748b', fontSize: 10 }}
+                        tickFormatter={(val) => val ? val.slice(5) : ''}
+                      />
+                      <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 10 }} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                        labelStyle={{ color: '#94a3b8' }}
+                      />
+                      {Object.entries(trendData).map(([symbol, data], idx) => {
+                        const colors = ['#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+                        return (
+                          <Line
+                            key={symbol}
+                            data={data}
+                            type="monotone"
+                            dataKey="score"
+                            name={symbol}
+                            stroke={colors[idx % colors.length]}
+                            strokeWidth={2}
+                            dot={false}
+                            connectNulls
+                          />
+                        );
+                      })}
+                      {/* Reference lines for score thresholds */}
+                      <Line dataKey={() => 75} stroke="#f97316" strokeDasharray="5 5" strokeWidth={1} dot={false} name="Hot (75)" />
+                      <Line dataKey={() => 50} stroke="#64748b" strokeDasharray="3 3" strokeWidth={1} dot={false} name="Forming (50)" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex items-center justify-center gap-6 mt-4 text-xs">
+                  <span className="flex items-center gap-1.5"><span className="w-8 h-0.5 bg-orange-500 border-dashed" style={{borderTop: '2px dashed #f97316'}} /><span className="text-slate-400">Hot Threshold (75)</span></span>
+                  <span className="flex items-center gap-1.5"><span className="w-8 h-0.5" style={{borderTop: '2px dashed #64748b'}} /><span className="text-slate-400">Forming (50)</span></span>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-12 text-center">
+                <Icons.TrendingUp size={48} className="mx-auto text-slate-600 mb-4" />
+                <h3 className="text-lg font-bold text-white mb-2">No Score History Yet</h3>
+                <p className="text-slate-400 mb-6">Build score history to see how stocks' breakout scores change over time. This helps identify stocks building momentum.</p>
+                <button onClick={buildScoreHistory} disabled={isBuildingHistory}
+                  className={`px-6 py-3 rounded-xl font-medium transition-all ${isBuildingHistory ? 'bg-slate-700 text-slate-400' : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:scale-105'}`}>
+                  {isBuildingHistory ? 'Building History...' : 'Build Score History'}
+                </button>
+              </div>
+            )}
+
+            {/* Stock Selector */}
+            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4">Compare Stocks</h3>
+              <p className="text-sm text-slate-400 mb-4">Enter stock symbols to compare their score trends (comma separated, max 5)</p>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  placeholder="e.g., NVDA, SMCI, PLTR"
+                  className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const symbols = e.target.value.split(',').map(s => s.trim().toUpperCase()).filter(s => s).slice(0, 5);
+                      if (symbols.length > 0) {
+                        setSelectedTrendStocks(symbols);
+                        fetchTrendData(symbols);
+                      }
+                    }
+                  }}
+                />
+                <button 
+                  onClick={() => {
+                    const input = document.querySelector('input[placeholder*="NVDA"]');
+                    if (input) {
+                      const symbols = input.value.split(',').map(s => s.trim().toUpperCase()).filter(s => s).slice(0, 5);
+                      if (symbols.length > 0) {
+                        setSelectedTrendStocks(symbols);
+                        fetchTrendData(symbols);
+                      }
+                    }
+                  }}
+                  className="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-medium text-white transition-all">
+                  Compare
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* PERFORMANCE TAB */}

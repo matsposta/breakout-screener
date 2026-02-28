@@ -9,6 +9,7 @@ from flask_cors import CORS
 from scanner import BreakoutScanner
 from tracker import PerformanceTracker, tracker
 from backtest import HistoricalBacktester, backtester
+from score_history import ScoreHistoryTracker, score_tracker
 import json
 import os
 from datetime import datetime
@@ -26,8 +27,10 @@ EASTERN = pytz.timezone('America/New_York')
 scanner = BreakoutScanner()
 scan_results = {'stocks': [], 'scan_time': None, 'is_scanning': False}
 backtest_status = {'is_running': False, 'last_run': None, 'progress': 0}
+history_status = {'is_running': False, 'last_run': None}
 scan_lock = threading.Lock()
 backtest_lock = threading.Lock()
+history_lock = threading.Lock()
 
 
 def get_eastern_time():
@@ -304,6 +307,115 @@ def get_backtest_stats():
     """Get historical backtest statistics."""
     try:
         stats = backtester.get_stats()
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# === SCORE HISTORY ENDPOINTS ===
+
+def run_history_build_async():
+    """Build score history in background."""
+    global history_status
+    
+    with history_lock:
+        history_status['is_running'] = True
+    
+    try:
+        symbols = scanner.get_stock_universe()
+        score_tracker.build_history(symbols, max_workers=5)
+        
+        with history_lock:
+            history_status['is_running'] = False
+            history_status['last_run'] = get_eastern_time()
+            
+    except Exception as e:
+        print(f"History build error: {e}")
+        with history_lock:
+            history_status['is_running'] = False
+
+
+@app.route('/api/history/build', methods=['POST'])
+def build_score_history():
+    """Build score history for all stocks."""
+    global history_status
+    
+    with history_lock:
+        if history_status['is_running']:
+            return jsonify({'status': 'already_running'}), 409
+    
+    thread = threading.Thread(target=run_history_build_async)
+    thread.start()
+    
+    return jsonify({
+        'status': 'build_started',
+        'message': 'Building 60-day score history for all stocks. This may take several minutes.'
+    })
+
+
+@app.route('/api/history/status', methods=['GET'])
+def get_history_status():
+    """Get score history build status."""
+    return jsonify({
+        'is_running': history_status.get('is_running', False),
+        'last_run': history_status.get('last_run')
+    })
+
+
+@app.route('/api/history/stock/<symbol>', methods=['GET'])
+def get_stock_score_history(symbol):
+    """Get score history for a specific stock."""
+    try:
+        days = int(request.args.get('days', 60))
+        history = score_tracker.get_stock_history(symbol, days)
+        return jsonify({
+            'symbol': symbol.upper(),
+            'history': history,
+            'count': len(history)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/chart', methods=['GET'])
+def get_chart_data():
+    """Get chart data for multiple stocks."""
+    try:
+        symbols = request.args.get('symbols', '')
+        days = int(request.args.get('days', 30))
+        
+        symbol_list = [s.strip() for s in symbols.split(',') if s.strip()] if symbols else None
+        chart_data = score_tracker.get_chart_data(symbol_list, days)
+        
+        return jsonify({
+            'data': chart_data,
+            'stocks': list(chart_data.keys()),
+            'days': days
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/trending', methods=['GET'])
+def get_trending_stocks():
+    """Get stocks with increasing scores."""
+    try:
+        min_increase = int(request.args.get('min_increase', 10))
+        days = int(request.args.get('days', 5))
+        trending = score_tracker.get_trending_stocks(min_increase, days)
+        return jsonify({
+            'trending': trending,
+            'count': len(trending)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/history/summary', methods=['GET'])
+def get_history_summary():
+    """Get summary of score history data."""
+    try:
+        stats = score_tracker.get_summary_stats()
         return jsonify(stats)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
