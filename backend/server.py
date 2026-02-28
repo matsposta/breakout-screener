@@ -8,6 +8,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from scanner import BreakoutScanner
 from tracker import PerformanceTracker, tracker
+from backtest import HistoricalBacktester, backtester
 import json
 import os
 from datetime import datetime
@@ -24,7 +25,9 @@ EASTERN = pytz.timezone('America/New_York')
 # Global state
 scanner = BreakoutScanner()
 scan_results = {'stocks': [], 'scan_time': None, 'is_scanning': False}
+backtest_status = {'is_running': False, 'last_run': None, 'progress': 0}
 scan_lock = threading.Lock()
+backtest_lock = threading.Lock()
 
 
 def get_eastern_time():
@@ -239,6 +242,69 @@ def update_performance():
     try:
         threading.Thread(target=tracker.update_performance).start()
         return jsonify({'status': 'update_started'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# === HISTORICAL BACKTEST ENDPOINTS ===
+
+def run_backtest_async():
+    """Run historical backtest in background."""
+    global backtest_status
+    
+    with backtest_lock:
+        backtest_status['is_running'] = True
+        backtest_status['progress'] = 0
+    
+    try:
+        symbols = scanner.get_stock_universe()
+        backtester.run_backtest(symbols, max_workers=5)
+        
+        with backtest_lock:
+            backtest_status['is_running'] = False
+            backtest_status['last_run'] = get_eastern_time()
+            backtest_status['progress'] = 100
+            
+    except Exception as e:
+        print(f"Backtest error: {e}")
+        with backtest_lock:
+            backtest_status['is_running'] = False
+
+
+@app.route('/api/backtest/run', methods=['POST'])
+def run_backtest():
+    """Run historical backtest to find past breakout signals."""
+    global backtest_status
+    
+    with backtest_lock:
+        if backtest_status['is_running']:
+            return jsonify({'status': 'already_running'}), 409
+    
+    thread = threading.Thread(target=run_backtest_async)
+    thread.start()
+    
+    return jsonify({
+        'status': 'backtest_started',
+        'message': 'Scanning historical data for breakout signals. This may take several minutes.'
+    })
+
+
+@app.route('/api/backtest/status', methods=['GET'])
+def get_backtest_status():
+    """Get backtest status."""
+    return jsonify({
+        'is_running': backtest_status.get('is_running', False),
+        'last_run': backtest_status.get('last_run'),
+        'progress': backtest_status.get('progress', 0)
+    })
+
+
+@app.route('/api/backtest/stats', methods=['GET'])
+def get_backtest_stats():
+    """Get historical backtest statistics."""
+    try:
+        stats = backtester.get_stats()
+        return jsonify(stats)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -467,13 +467,17 @@ const MetricCard = ({ metric }) => (
 );
 
 // Performance Stats Card
-const PerformanceStatsCard = ({ stats }) => {
+const PerformanceStatsCard = ({ stats, onRunBacktest, isBacktesting }) => {
   if (!stats || stats.total_signals === 0) {
     return (
       <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-8 text-center">
         <Icons.BarChart2 size={48} className="mx-auto text-slate-600 mb-4" />
         <h3 className="text-lg font-bold text-white mb-2">No Performance Data Yet</h3>
-        <p className="text-slate-400">Performance tracking starts when stocks hit 80+ score. Run scans to begin collecting data.</p>
+        <p className="text-slate-400 mb-6">Run a historical backtest to analyze how past breakout signals (score 75+) performed over the following days.</p>
+        <button onClick={onRunBacktest} disabled={isBacktesting}
+          className={`px-6 py-3 rounded-xl font-medium transition-all ${isBacktesting ? 'bg-slate-700 text-slate-400' : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:scale-105'}`}>
+          {isBacktesting ? 'Running Backtest...' : 'Run Historical Backtest'}
+        </button>
       </div>
     );
   }
@@ -482,8 +486,17 @@ const PerformanceStatsCard = ({ stats }) => {
     <div className="space-y-6">
       <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-white">Historical Performance</h3>
-          <span className="text-sm text-slate-400">{stats.total_signals} signals tracked</span>
+          <div>
+            <h3 className="text-lg font-bold text-white">Historical Performance</h3>
+            <p className="text-xs text-slate-500">Based on stocks that hit score 75+ in the past 90 days</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-400">{stats.total_signals} signals tracked</span>
+            <button onClick={onRunBacktest} disabled={isBacktesting}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isBacktesting ? 'bg-slate-700 text-slate-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>
+              {isBacktesting ? 'Running...' : 'Refresh'}
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-4 gap-4">
           {[1, 5, 20, 30].map(days => {
@@ -497,6 +510,7 @@ const PerformanceStatsCard = ({ stats }) => {
                 <div className="text-xs text-slate-400 mt-1">
                   Win Rate: <span className={data?.win_rate >= 50 ? 'text-emerald-400' : 'text-slate-300'}>{data?.win_rate || '--'}%</span>
                 </div>
+                {data?.sample_size && <div className="text-xs text-slate-600 mt-0.5">n={data.sample_size}</div>}
               </div>
             );
           })}
@@ -509,6 +523,55 @@ const PerformanceStatsCard = ({ stats }) => {
         )}
       </div>
 
+      {/* Recent Signals Table */}
+      {stats.recent_signals?.length > 0 && (
+        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+          <h4 className="text-sm font-bold text-white mb-4">Recent Breakout Signals</h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-slate-500 text-xs uppercase">
+                  <th className="text-left py-2 px-2">Symbol</th>
+                  <th className="text-left py-2 px-2">Date</th>
+                  <th className="text-center py-2 px-2">Score</th>
+                  <th className="text-right py-2 px-2">Price</th>
+                  <th className="text-right py-2 px-2">1D</th>
+                  <th className="text-right py-2 px-2">5D</th>
+                  <th className="text-right py-2 px-2">20D</th>
+                  <th className="text-right py-2 px-2">30D</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recent_signals.slice(0, 20).map((sig, i) => (
+                  <tr key={i} className="border-t border-slate-800">
+                    <td className="py-2 px-2 font-bold text-white">{sig.symbol}</td>
+                    <td className="py-2 px-2 text-slate-400">{sig.date}</td>
+                    <td className="py-2 px-2 text-center">
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${sig.score >= 80 ? 'bg-orange-500/20 text-orange-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                        {sig.score}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2 text-right text-slate-300">${sig.price?.toFixed(2)}</td>
+                    <td className={`py-2 px-2 text-right font-medium ${sig.returns?.['1d'] >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {sig.returns?.['1d'] != null ? `${sig.returns['1d'] >= 0 ? '+' : ''}${sig.returns['1d'].toFixed(1)}%` : '--'}
+                    </td>
+                    <td className={`py-2 px-2 text-right font-medium ${sig.returns?.['5d'] >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {sig.returns?.['5d'] != null ? `${sig.returns['5d'] >= 0 ? '+' : ''}${sig.returns['5d'].toFixed(1)}%` : '--'}
+                    </td>
+                    <td className={`py-2 px-2 text-right font-medium ${sig.returns?.['20d'] >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {sig.returns?.['20d'] != null ? `${sig.returns['20d'] >= 0 ? '+' : ''}${sig.returns['20d'].toFixed(1)}%` : '--'}
+                    </td>
+                    <td className={`py-2 px-2 text-right font-medium ${sig.returns?.['30d'] >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {sig.returns?.['30d'] != null ? `${sig.returns['30d'] >= 0 ? '+' : ''}${sig.returns['30d'].toFixed(1)}%` : '--'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {stats.top_winners?.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
@@ -516,10 +579,13 @@ const PerformanceStatsCard = ({ stats }) => {
               <Icons.ArrowUp size={14} /> Top Winners (5D)
             </h4>
             <div className="space-y-2">
-              {stats.top_winners.map((w, i) => (
+              {stats.top_winners.slice(0, 5).map((w, i) => (
                 <div key={i} className="flex justify-between text-sm">
                   <span className="text-white font-medium">{w.symbol}</span>
-                  <span className="text-emerald-400">+{w.return}%</span>
+                  <div className="text-right">
+                    <span className="text-emerald-400 font-bold">+{w.return?.toFixed(1)}%</span>
+                    <span className="text-slate-500 text-xs ml-2">{w.date}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -529,10 +595,13 @@ const PerformanceStatsCard = ({ stats }) => {
               <Icons.ArrowDown size={14} /> Worst Performers (5D)
             </h4>
             <div className="space-y-2">
-              {stats.top_losers?.map((l, i) => (
+              {stats.top_losers?.slice(0, 5).map((l, i) => (
                 <div key={i} className="flex justify-between text-sm">
                   <span className="text-white font-medium">{l.symbol}</span>
-                  <span className="text-red-400">{l.return}%</span>
+                  <div className="text-right">
+                    <span className="text-red-400 font-bold">{l.return?.toFixed(1)}%</span>
+                    <span className="text-slate-500 text-xs ml-2">{l.date}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -553,6 +622,7 @@ export default function App() {
   const [sortBy, setSortBy] = useState('score');
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
+  const [isBacktesting, setIsBacktesting] = useState(false);
   const [scanTime, setScanTime] = useState(null);
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState({ ready: 0, forming: 0, watching: 0 });
@@ -598,10 +668,31 @@ export default function App() {
 
   const fetchPerformanceStats = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/performance/stats`);
+      const response = await fetch(`${API_BASE}/api/backtest/stats`);
       if (response.ok) setPerformanceStats(await response.json());
     } catch (err) {
       console.error('Error fetching performance stats:', err);
+    }
+  };
+
+  const triggerBacktest = async () => {
+    try {
+      setIsBacktesting(true);
+      const response = await fetch(`${API_BASE}/api/backtest/run`, { method: 'POST' });
+      if (response.ok) {
+        const pollInterval = setInterval(async () => {
+          const statusResponse = await fetch(`${API_BASE}/api/backtest/status`);
+          const status = await statusResponse.json();
+          if (!status.is_running) {
+            clearInterval(pollInterval);
+            setIsBacktesting(false);
+            fetchPerformanceStats();
+          }
+        }, 5000);
+      }
+    } catch (err) {
+      console.error('Failed to start backtest:', err);
+      setIsBacktesting(false);
     }
   };
 
@@ -617,7 +708,6 @@ export default function App() {
             clearInterval(pollInterval);
             setIsScanning(false);
             fetchResults();
-            fetchPerformanceStats();
           }
         }, 2000);
       }
@@ -791,9 +881,9 @@ export default function App() {
           <div>
             <div className="mb-6">
               <h2 className="text-2xl font-black text-white mb-2">Performance Tracking</h2>
-              <p className="text-slate-400">Track how breakout signals perform over time. Data collected from stocks that hit 80+ score.</p>
+              <p className="text-slate-400">Historical analysis of stocks that hit breakout criteria (score 75+) over the past 90 days. See actual returns at 1, 5, 20, and 30 day intervals.</p>
             </div>
-            <PerformanceStatsCard stats={performanceStats} />
+            <PerformanceStatsCard stats={performanceStats} onRunBacktest={triggerBacktest} isBacktesting={isBacktesting} />
           </div>
         )}
 
